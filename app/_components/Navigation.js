@@ -4,7 +4,7 @@ import { auth } from "../_lib/auth.js";
 export default async function Navigation() {
   const session = await auth();
   return (
-    <nav className="z-10 text-base sm:text-xl">
+    <nav aria-label="Main navigation" className="z-10 text-base sm:text-xl">
       <ul className="flex gap-4 sm:gap-10 items-center">
         <li>
           <Link
@@ -23,25 +23,27 @@ export default async function Navigation() {
           </Link>
         </li>
         <li>
-          {session?.user?.image ? (
+          {session?.user ? (
             <Link
               href="/account"
               className="hover:text-accent-400 transition-colors flex items-center gap-4"
             >
-              <img
-                className="h-8 rounded-full"
-                src={session.user.image}
-                alt={session.user.name}
-                referrerPolicy="no-referrer"
-              />
+              {session.user.image && (
+                <img
+                  className="h-8 rounded-full"
+                  src={session.user.image}
+                  alt=""
+                  referrerPolicy="no-referrer"
+                />
+              )}
               <span>Guest area</span>
             </Link>
           ) : (
             <Link
-              href="/account"
-              className="hover:text-accent-400 transition-colors"
+              href="/login"
+              className="inline-flex items-center justify-center bg-accent-500 text-primary-950 px-4 py-2 sm:px-5 font-semibold hover:bg-accent-600 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent-400 whitespace-nowrap"
             >
-              Guest area
+              Log in
             </Link>
           )}
         </li>
