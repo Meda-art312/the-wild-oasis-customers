@@ -12,8 +12,11 @@ export const metadata = {
   title: "Cabins",
 };
 
-export default function Page({ searchParams }) {
-  const filter = searchParams?.capacity ?? "all";
+export default async function Page({ searchParams }) {
+  const params = await searchParams;
+  const filter = ["all", "small", "medium", "large"].includes(params.capacity)
+    ? params.capacity
+    : "all";
 
   return (
     <div>

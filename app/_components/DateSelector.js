@@ -1,102 +1,75 @@
 "use client";
-import {
-  differenceInDays,
-  isPast,
-  isSameDay,
-  isWithinInterval,
-} from "date-fns";
+import { differenceInCalendarDays, format, startOfDay } from "date-fns";
 import { DayPicker } from "react-day-picker";
-import "react-day-picker/dist/style.css";
-import { useReservation } from "./ReservationContext.js";
-
-function isAlreadyBooked(range, datesArr) {
-  return (
-    range.from &&
-    range.to &&
-    datesArr.some((date) =>
-      isWithinInterval(date, { start: range.from, end: range.to })
-    )
-  );
-}
-
-function DateSelector({ settings, cabin, bookedDates }) {
+import "react-day-picker/style.css";
+import { useReservation } from "./ReservationContext";
+export default function DateSelector({ settings, cabin, bookedDates }) {
   const { range, setRange, resetRange } = useReservation();
-  // CHANGE
-
-  const { regularPrice, discount } = cabin;
-  const numNights = differenceInDays(range.to, range.from);
-  const cabinPrice = numNights * (regularPrice - discount);
-
-  // SETTINGS
-  const { minBookingLength, maxBookingLength } = settings;
-
+  const numNights =
+    range?.from && range?.to
+      ? differenceInCalendarDays(range.to, range.from)
+      : 0;
+  const nightlyPrice = Number(cabin.regularPrice) - Number(cabin.discount);
+  const today = startOfDay(new Date());
   return (
-    <div className="flex flex-col justify-between">
+    <div className="flex flex-col justify-between p-4">
+      <p className="text-primary-300 text-sm mb-3">
+        {settings.minBookingLength}–{settings.maxBookingLength} nights per stay.
+        Marked dates are occupied; departure on the next arrival date is
+        allowed.
+      </p>
       <DayPicker
-        className="pt-12 ps-2 place-items-center"
-        classNames={{
-          today: "bg-accent-500",
-          selected: `bg-primary-500 text-white`,
-          range_start: "bg-primary-700",
-          range_end: "bg-primary-700",
-          range_middle: "bg-primary-700",
-          chevron: `fill-primary-500`,
-        }}
         mode="range"
-        min={minBookingLength + 1}
-        max={maxBookingLength}
-        fromMonth={new Date()}
-        fromDate={new Date()}
-        toYear={new Date().getFullYear() + 5}
+        min={settings.minBookingLength}
+        max={settings.maxBookingLength}
+        startMonth={today}
+        endMonth={new Date(today.getFullYear() + 5, 11)}
         captionLayout="dropdown"
-        numberOfMonths={2}
-        onSelect={(range) => setRange(range)}
+        numberOfMonths={1}
         selected={range}
-        disabled={(curDate) =>
-          isPast(curDate) ||
-          bookedDates.some((date) => isSameDay(date, curDate))
+        onSelect={(value) =>
+          setRange(value ?? { from: undefined, to: undefined })
         }
+        disabled={{ before: today }}
+        excludeDisabled
+        modifiers={{
+          occupied: (date) =>
+            bookedDates.some(
+              (b) =>
+                format(date, "yyyy-MM-dd") >= b.startDate.slice(0, 10) &&
+                format(date, "yyyy-MM-dd") < b.endDate.slice(0, 10),
+            ),
+        }}
+        modifiersClassNames={{ occupied: "line-through text-red-300" }}
+        classNames={{
+          today: "text-accent-400",
+          selected: "bg-primary-600",
+          chevron: "fill-accent-500",
+        }}
       />
-
-      <div className="flex items-center justify-between px-8 bg-accent-500 text-primary-800 h-[72px]">
-        <div className="flex items-baseline gap-6">
-          <p className="flex gap-2 items-baseline">
-            {discount > 0 ? (
-              <>
-                <span className="text-2xl">${regularPrice - discount}</span>
-                <span className="line-through font-semibold text-primary-700">
-                  ${regularPrice}
-                </span>
-              </>
-            ) : (
-              <span className="text-2xl">${regularPrice}</span>
-            )}
-            <span className="">/night</span>
+      <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-accent-500 text-primary-800">
+        <p>
+          <strong>${nightlyPrice}</strong> / night{" "}
+          {cabin.discount > 0 && (
+            <del className="ml-2">${cabin.regularPrice}</del>
+          )}
+        </p>
+        {numNights > 0 && (
+          <p>
+            {numNights} nights ·{" "}
+            <strong>Total ${numNights * nightlyPrice}</strong>
           </p>
-          {numNights ? (
-            <>
-              <p className="bg-accent-600 px-3 py-2 text-2xl">
-                <span>&times;</span> <span>{numNights}</span>
-              </p>
-              <p>
-                <span className="text-lg font-bold uppercase">Total</span>{" "}
-                <span className="text-2xl font-semibold">${cabinPrice}</span>
-              </p>
-            </>
-          ) : null}
-        </div>
-
-        {range.from || range.to ? (
+        )}
+        {(range?.from || range?.to) && (
           <button
-            className="border border-primary-800 py-2 px-4 text-sm font-semibold"
-            onClick={() => resetRange()}
+            type="button"
+            onClick={resetRange}
+            className="border border-primary-800 px-3 py-2 text-sm"
           >
-            Clear
+            Clear dates
           </button>
-        ) : null}
+        )}
       </div>
     </div>
   );
 }
-
-export default DateSelector;

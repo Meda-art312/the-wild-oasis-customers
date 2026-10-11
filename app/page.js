@@ -3,9 +3,11 @@ import Link from "next/link.js";
 import bg from "@/public/bg.png";
 export default function Page() {
   return (
-    <main className="mt-24">
+    <main className="mt-16 sm:mt-24">
       <Image
         src={bg}
+        priority
+        sizes="100vw"
         fill
         placeholder="blur"
         quality={80}
@@ -14,7 +16,7 @@ export default function Page() {
       />
 
       <div className="relative z-10 text-center">
-        <h1 className="text-8xl text-primary-50 mb-10 tracking-tight font-normal">
+        <h1 className="text-5xl sm:text-7xl lg:text-8xl text-primary-50 mb-10 tracking-tight font-normal">
           Welcome to paradise.
         </h1>
         <Link

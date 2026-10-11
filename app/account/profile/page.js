@@ -1,15 +1,15 @@
 import SelectCountry from "@/app/_components/SelectCountry.js";
 import UpdateProfileForm from "@/app/_components/UpdateProfileForm.js";
-import { auth } from "@/app/_lib/auth.js";
-import { getGuest } from "@/app/_lib/data-service.js";
+import { requireGuest } from "@/app/_lib/auth.js";
+import { getGuestById } from "@/app/_lib/data-service.js";
 
 export const metadata = {
-  title: "Update profle ",
+  title: "Update profile",
 };
 
 export default async function Page() {
-  const session = await auth()
-  const guest = await getGuest(session.user.email)
+  const session = { user: await requireGuest() };
+  const guest = await getGuest(session.user.guestId);
   const nationality = "portugal";
   // CHANGE
 

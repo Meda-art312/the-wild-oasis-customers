@@ -1,5 +1,6 @@
+import Link from "next/link";
 import ReservationList from "@/app/_components/ReservationList";
-import { auth } from "@/app/_lib/auth";
+import { requireGuest } from "@/app/_lib/auth";
 import { getBookings } from "@/app/_lib/data-service";
 
 export const metadata = {
@@ -7,7 +8,7 @@ export const metadata = {
 };
 
 export default async function Page() {
-  const session = await auth();
+  const session = { user: await requireGuest() };
   const bookings = await getBookings(session.user.guestId);
 
   return (
@@ -19,9 +20,9 @@ export default async function Page() {
       {bookings.length === 0 ? (
         <p className="text-lg">
           You have no reservations yet. Check out our{" "}
-          <a className="underline text-accent-500" href="/cabins">
+          <Link className="underline text-accent-500" href="/cabins">
             luxury cabins &rarr;
-          </a>
+          </Link>
         </p>
       ) : (
         <ReservationList bookings={bookings} />

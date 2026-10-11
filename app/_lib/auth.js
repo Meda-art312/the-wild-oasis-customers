@@ -1,42 +1,49 @@
+import "server-only";
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
-import { createGuest, getGuest } from "./data-service.js";
-
-const authConfig = {
-  providers: [
-    Google({
-      clientId: process.env.AUTH_GOOGLE_ID,
-      clientSecret: process.env.AUTH_GOOGLE_SECRET,
-    }),
-  ],
+import { redirect } from "next/navigation";
+import { getCustomerGuest, getOrCreateGuest } from "./data-service";
+export const googleConfigured = Boolean(
+  process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET,
+);
+const nextAuth = NextAuth({
+  trustHost: true,
+  providers: googleConfigured ? [Google] : [],
+  session: { strategy: "jwt" },
   callbacks: {
-    authorized({ auth, request }) {
-      return !!auth?.user;
-    },
     async signIn({ user, account, profile }) {
+      if (
+        account?.provider !== "google" ||
+        profile?.email_verified !== true ||
+        !user.email
+      )
+        return false;
       try {
-        const existingGuest = await getGuest(user.email);
-        if (!existingGuest) {
-          await createGuest({ email: user.email, fullName: user.name });
-        }
+        await getOrCreateGuest(user, profile.sub);
         return true;
-      } catch (error) {
+      } catch {
         return false;
       }
     },
-    async session({ session, user }) {
-      const guest = await getGuest(session.user.email);
+    async jwt({ token, account }) {
+      if (account?.provider === "google")
+        token.googleSubject = account.providerAccountId;
+      return token;
+    },
+    async session({ session, token }) {
+      if (!session.user?.email || !token.googleSubject) return null;
+      const guest = await getCustomerGuest(token.googleSubject);
+      if (!guest) return null;
       session.user.guestId = guest.id;
       return session;
     },
   },
-  pages: {
-    signIn: "/login",
-  },
-};
-export const {
-  auth,
-  signIn,
-  signOut,
-  handlers: { GET, POST },
-} = NextAuth(authConfig);
+  pages: { signIn: "/login", error: "/login" },
+});
+export const { auth, signIn, signOut } = nextAuth;
+export const { GET, POST } = nextAuth.handlers;
+export async function requireGuest() {
+  const session = await auth();
+  if (!session?.user?.guestId) redirect("/login");
+  return session.user;
+}

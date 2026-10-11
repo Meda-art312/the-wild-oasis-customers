@@ -1,11 +1,11 @@
-import { auth } from "../_lib/auth.js";
+import { requireGuest } from "../_lib/auth.js";
 
 export const metadata = {
   title: "Guest area",
 };
 
 async function Page() {
-  const session = await auth();
+  const session = { user: await requireGuest() };
   const firstName = session.user.name.split(" ").at(0);
   return (
     <h2 className="font-semibold text-2xl text-accent-400 mb-7">

@@ -7,17 +7,18 @@ function CabinCard({ cabin }) {
 
   return (
     <div className="flex border-primary-800 border">
-      <div className="flex-1 relative">
+      <div className="w-1/3 relative shrink-0">
         <Image
           fill
           src={image}
+          sizes="(max-width: 768px) 35vw, 20vw"
           alt={`Cabin ${name}`}
           className="flex-1 border-r border-primary-800 object-cover"
         />
       </div>
 
-      <div className="flex-grow">
-        <div className="pt-5 pb-4 px-7 bg-primary-950">
+      <div className="flex-grow min-w-0">
+        <div className="pt-5 pb-4 px-4 bg-primary-950">
           <h3 className="text-accent-500 font-semibold text-2xl mb-3">
             Cabin {name}
           </h3>

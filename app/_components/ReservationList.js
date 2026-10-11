@@ -1,34 +1,35 @@
 "use client";
-
+import { useOptimistic, useState } from "react";
 import ReservationCard from "./ReservationCard";
-import { deleteBooking } from "../_lib/actions";
-
-import { useOptimistic } from "react";
-
-function ReservationList({ bookings }) {
+import { deleteReservation } from "../_lib/actions";
+export default function ReservationList({ bookings }) {
+  const [error, setError] = useState("");
   const [optimisticBookings, optimisticDelete] = useOptimistic(
     bookings,
-    (curBookings, bookingId) => {
-      return curBookings.filter((booking) => booking.id !== bookingId);
-    }
+    (current, id) => current.filter((b) => b.id !== id),
   );
-
-  async function handleDelete(bookingId) {
-    optimisticDelete(bookingId);
-    await deleteBooking(bookingId);
+  async function handleDelete(id) {
+    setError("");
+    optimisticDelete(id);
+    try {
+      const result = await deleteReservation(id);
+      if (result.error) setError(result.error);
+    } catch {
+      setError("Cancellation failed. Please try again.");
+    }
   }
-
   return (
-    <ul className="space-y-6">
-      {optimisticBookings.map((booking) => (
-        <ReservationCard
-          booking={booking}
-          onDelete={handleDelete}
-          key={booking.id}
-        />
-      ))}
-    </ul>
+    <>
+      {error && (
+        <p role="alert" className="text-red-300 mb-4">
+          {error}
+        </p>
+      )}
+      <div className="space-y-6">
+        {optimisticBookings.map((b) => (
+          <ReservationCard booking={b} onDelete={handleDelete} key={b.id} />
+        ))}
+      </div>
+    </>
   );
 }
-
-export default ReservationList;

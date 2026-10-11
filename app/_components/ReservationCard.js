@@ -1,3 +1,4 @@
+import { canManageBooking } from "../_lib/booking-rules";
 import Link from "next/link";
 import Image from "next/image";
 import { PencilSquareIcon } from "@heroicons/react/24/solid";
@@ -28,6 +29,7 @@ function ReservationCard({ booking, onDelete }) {
       <div className="relative h-32 aspect-square">
         <Image
           src={image}
+          sizes="128px"
           alt={`Cabin ${name}`}
           fill
           className="object-cover border-r border-primary-800"
@@ -39,7 +41,7 @@ function ReservationCard({ booking, onDelete }) {
           <h3 className="text-xl font-semibold">
             {numNights} nights in Cabin {name}
           </h3>
-          {isPast(new Date(startDate)) ? (
+          {!canManageBooking(booking) ? (
             <span className="bg-yellow-800 text-yellow-200 h-7 px-3 uppercase text-xs font-bold flex items-center rounded-sm">
               past
             </span>
@@ -71,7 +73,7 @@ function ReservationCard({ booking, onDelete }) {
       </div>
 
       <div className="flex flex-col border-l border-primary-800 w-[100px]">
-        {!isPast(startDate) ? (
+        {canManageBooking(booking) ? (
           <>
             <Link
               href={`/account/reservations/edit/${id}`}
